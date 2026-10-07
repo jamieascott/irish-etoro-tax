@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>irish-etoro-tax · Demo</title>
+<meta name="description" content="A demo tool for Irish retail investors: upload your etoro statements to help work out your annual Capital Gains Tax. Not tax advice.">
+<style>
+  :root { --bg:#f5f7fb; --card:#fff; --ink:#142033; --muted:#68758a; --line:#e5eaf2;
+          --accent:#0f766e; --accent2:#115e59; --warn:#b45309; --warnbg:#fef3c7; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f141b; --card:#18202a; --ink:#e6e9ee; --muted:#9aa6b6; --line:#2a3441;
+            --accent:#2dd4bf; --accent2:#5eead4; --warn:#fbbf24; --warnbg:#3a2c0b; } }
+  * { box-sizing:border-box }
+  body { margin:0; font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         background:var(--bg); color:var(--ink) }
+  a { color:var(--accent) }
+  .demo-bar { background:var(--warnbg); color:var(--warn); text-align:center; font-size:14px; font-weight:600;
+              padding:8px 16px; border-bottom:1px solid var(--line) }
+  main { max-width:1040px; margin:0 auto; padding:48px 22px 64px }
+  .eyebrow { font:600 13px/1 ui-monospace,Menlo,monospace; color:var(--accent); letter-spacing:.04em }
+  h1 { font-size:clamp(30px,5vw,46px); line-height:1.12; margin:12px 0 16px; letter-spacing:-.02em }
+  .lede { font-size:19px; color:var(--muted); max-width:720px; margin:0 }
+  .cta { display:flex; gap:12px; flex-wrap:wrap; margin:28px 0 8px }
+  .btn { display:inline-block; padding:13px 20px; border-radius:12px; font-weight:700; text-decoration:none;
+         border:1px solid var(--accent) }
+  .btn.primary { background:var(--accent); color:#fff } .btn.primary:hover { background:var(--accent2) }
+  @media (prefers-color-scheme: dark) { .btn.primary { color:#05201d } }
+  .btn.ghost { color:var(--accent); background:transparent }
+  .fine { font-size:13px; color:var(--muted) }
+  h2 { font-size:22px; margin:52px 0 16px }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px }
+  .card h3 { margin:0 0 6px; font-size:16px } .card p { margin:0; color:var(--muted); font-size:14.5px }
+  .icon { font-size:22px; margin-bottom:8px }
+  ol.steps { counter-reset:s; list-style:none; padding:0; margin:0; display:grid; gap:12px }
+  ol.steps li { counter-increment:s; background:var(--card); border:1px solid var(--line); border-radius:14px;
+                padding:16px 18px 16px 62px; position:relative }
+  ol.steps li::before { content:counter(s); position:absolute; left:18px; top:15px; width:30px; height:30px;
+                        border-radius:50%; background:var(--accent); color:#fff; font-weight:700;
+                        display:grid; place-items:center; font-size:15px }
+  @media (prefers-color-scheme: dark) { ol.steps li::before { color:#05201d } }
+  ol.steps b { display:block } ol.steps span { color:var(--muted); font-size:14.5px }
+  .notice { border:1px solid var(--warn); background:var(--warnbg); border-radius:14px; padding:20px 22px; margin-top:52px }
+  .notice h2 { margin:0 0 8px; font-size:19px; color:var(--warn) }
+  .notice p { margin:6px 0 } .notice ul { margin:8px 0 0; padding-left:20px } .notice li { margin:4px 0 }
+  .privacy { display:flex; gap:14px; align-items:flex-start }
+  footer { border-top:1px solid var(--line); margin-top:52px; padding-top:18px; color:var(--muted); font-size:13px }
+</style>
+</head>
+<body>
+<div class="demo-bar" role="note">Demo site · Built for Irish retail investors · Not tax advice</div>
+
+<main>
+  <div class="eyebrow">irish-etoro-tax</div>
+  <h1>Work out your annual Capital Gains from your etoro statements</h1>
+  <p class="lede">Upload your etoro annual account statements and get a clear, year-by-year view of what you may owe
+    under Irish tax rules: capital gains, losses to carry forward, dividends and ETF exit tax.</p>
+
+  <div class="cta">
+    <a class="btn primary" href="irish_etoro_tax_assistant.html">Upload your statements →</a>
+    <a class="btn ghost" href="#how">How it works</a>
+  </div>
+  <p class="fine">This is a demo. Your files are read in your browser and are never uploaded to a server.</p>
+
+  <h2>What it lets you do</h2>
+  <div class="grid">
+    <div class="card"><div class="icon">📈</div><h3>Capital Gains Tax</h3>
+      <p>Charges every disposal to CGT at 33 percent, applying the €1,270 annual exemption, the four-week wash-sale
+        restriction, and relief for current-year and forward losses.</p></div>
+    <div class="card"><div class="icon">📥</div><h3>etoro statement import</h3>
+      <p>Reconciles transaction histories from etoro into a single position book, with manual entry for any broker
+        not yet supported.</p></div>
+    <div class="card"><div class="icon">🔁</div><h3>Losses carried forward</h3>
+      <p>Upload several years together and see how unused losses carry forward from one year to the next.</p></div>
+    <div class="card"><div class="icon">⏱️</div><h3>Four-week rule flags</h3>
+      <p>Highlights losses where the same shares were bought back within four weeks, since those losses may be restricted.</p></div>
+    <div class="card"><div class="icon">💶</div><h3>Dividends &amp; withholding tax</h3>
+      <p>Summarises dividends received, the foreign tax withheld, and what may be creditable against Irish tax.</p></div>
+    <div class="card"><div class="icon">🧺</div><h3>ETFs &amp; exit tax</h3>
+      <p>Flags EU-domiciled ETFs that fall under exit tax and the 8-year deemed disposal rules, rather than CGT.</p></div>
+    <div class="card"><div class="icon">🧾</div><h3>Transaction audit</h3>
+      <p>Lists every disposal and dividend so you can check the figures against your statements.</p></div>
+  </div>
+
+  <h2 id="how">How it works</h2>
+  <ol class="steps">
+    <li><b>Download your etoro account statements</b>
+      <span>On etoro's Account Statement page, choose 1 January to 31 December for each tax year and download the XLSX file.</span></li>
+    <li><b>Upload one or more years</b>
+      <span>Adding earlier years too gives better loss carry-forward figures and a fuller purchase history.</span></li>
+    <li><b>Review the results</b>
+      <span>Work through the summary, CGT detail, dividends and review flags, then take the figures to your return or your accountant.</span></li>
+  </ol>
+
+  <div class="card privacy" style="margin-top:14px">
+    <div class="icon">🔒</div>
+    <div><h3>Your data stays on your device</h3>
+      <p>Statements and manual entries are processed entirely in your browser. Nothing is sent to a server, stored, or shared, and closing the tab clears it.
+        Export your manual entries to CSV to keep them. ECB exchange rates are bundled with the page. Newer rates are only downloaded from the ECB if your dates need them, and that request contains no personal data.</p></div>
+  </div>
+
+  <section class="notice" aria-labelledby="disclaimer">
+    <h2 id="disclaimer">⚠️ Demo only. Not tax advice.</h2>
+    <p><b>irish-etoro-tax is a demo site</b> that helps Irish retail investors make a first estimate of their annual Capital Gains
+      from etoro statements. The results are estimates to help you prepare. They are not a tax return and not financial or tax advice.</p>
+    <ul>
+      <li>Check every figure against your own records and Revenue guidance.</li>
+      <li>Tax rules, rates and exemptions change. The tool may not reflect the latest position or your personal circumstances.</li>
+      <li>Some things it can't fully handle: corporate actions, transfers between brokers, missing history before your first uploaded year, FX methods, and treaty treatment of foreign dividends.</li>
+      <li><b>Always consult a qualified accountant or tax adviser</b> for complex situations, or before you file.</li>
+    </ul>
+  </section>
+
+  <footer>
+    irish-etoro-tax · Demo built for Irish retail investors · Not affiliated with etoro or the Revenue Commissioners ·
+    Not tax advice. Always consult a qualified accountant for complex situations.
+  </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Personal data: reports built from real statements, and the statements themselves
+output/
+*.xlsx
+__pycache__/
+.DS_Store

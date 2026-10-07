@@ -3,78 +3,643 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Irish eToro Tax Assistant</title>
+<title>Irish etoro Tax Assistant · Demo</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="ecb_rates.js"></script>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#142033;--muted:#68758a;--line:#e5eaf2;--accent:#0f766e;--accent2:#115e59;--warn:#b45309;--bad:#b91c1c;--good:#166534;--purple:#6d28d9}
 *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
 .app{max-width:1400px;margin:0 auto;padding:24px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}.title h1{margin:0;font-size:28px}.title p{margin:6px 0 0;color:var(--muted)}
 .upload{background:var(--card);border:1px dashed #b7c4d8;border-radius:14px;padding:16px;min-width:330px}.upload label{display:block;font-weight:700;margin-bottom:8px}.upload input{width:100%}.hint{font-size:12px;color:var(--muted);margin-top:8px}
-nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}.tab{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:10px;cursor:pointer;font-weight:700;color:#334155}.tab.active{background:var(--ink);color:white;border-color:var(--ink)}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0;align-items:center}.tab{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:10px;cursor:pointer;font-weight:700;color:#334155}.tab.active{background:var(--ink);color:white;border-color:var(--ink)}
+.navyear{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}.panel h2{font-size:17px;margin:0 0 12px}.panel h3{font-size:14px;margin:18px 0 8px}
-.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.kpi .label{color:var(--muted);font-size:12px}.kpi .value{font-size:23px;font-weight:800;margin-top:5px}.kpi .sub{font-size:11px;color:var(--muted);margin-top:4px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.tablewrap{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}th{position:sticky;top:0;background:#f8fafc;color:#475569}td.num{text-align:right;font-variant-numeric:tabular-nums}.badge{display:inline-block;padding:4px 7px;border-radius:999px;font-size:11px;font-weight:800}.good{background:#dcfce7;color:var(--good)}.warn{background:#fef3c7;color:var(--warn)}.bad{background:#fee2e2;color:var(--bad)}.neutral{background:#eef2ff;color:#3730a3}
-.barrow{display:grid;grid-template-columns:110px 1fr 90px;gap:10px;align-items:center;margin:9px 0;font-size:12px}.bar{height:12px;background:#e6ebf3;border-radius:999px;overflow:hidden}.bar>span{display:block;height:100%;background:var(--accent)}
-.callout{padding:12px 14px;border-radius:10px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:13px}.callout.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.callout.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
-.muted{color:var(--muted)}.right{text-align:right}.small{font-size:12px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.footer{color:var(--muted);font-size:11px;margin-top:18px}.hidden{display:none}.search{padding:8px 10px;border:1px solid var(--line);border-radius:9px;width:280px}.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:800px){.top,.grid2,.grid3{display:block}.upload{margin-top:16px}.kpis{grid-template-columns:repeat(2,1fr)}.panel{margin-top:14px}}
-</style></head>
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0}.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.kpi .label{color:var(--muted);font-size:12px}.kpi .value{font-size:23px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums}.kpi .sub{font-size:11px;color:var(--muted);margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.tablewrap{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}th{position:sticky;top:0;background:#f8fafc;color:#475569}table.sortable th{cursor:pointer;user-select:none}th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}tr.muted td{opacity:.6}tr.total td{font-weight:800;background:#f8fafc}
+.badge{display:inline-block;padding:4px 7px;border-radius:999px;font-size:11px;font-weight:800}.good{background:#dcfce7;color:var(--good)}.warn{background:#fef3c7;color:var(--warn)}.bad{background:#fee2e2;color:var(--bad)}.neutral{background:#eef2ff;color:#3730a3}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.callout{padding:12px 14px;border-radius:10px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:13px;margin-bottom:12px}.callout.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.callout.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.muted{color:var(--muted)}.right{text-align:right}.small{font-size:12px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.footer{color:var(--muted);font-size:11px;margin-top:18px}.search{padding:8px 10px;border:1px solid var(--line);border-radius:9px;width:280px}.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}.form label{display:grid;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.form input,.form select,.controls select,.controls input[type=number]{padding:8px 9px;border:1px solid var(--line);border-radius:9px;font:inherit;color:var(--ink);background:#fff;width:100%}
+.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;cursor:pointer;font:inherit;font-weight:700}.btn:hover{background:var(--accent2)}
+.btn.ghost{background:#fff;color:var(--accent)}.btn.danger{background:#fff;color:var(--bad);border-color:#fecaca}.btn.small{padding:4px 9px;font-size:12px}
+.error{color:var(--bad);font-size:13px;margin-top:8px;font-weight:600}
+ul.tight{margin:6px 0;padding-left:18px}ul.tight li{margin:3px 0}
+@media(max-width:800px){.top,.grid2,.grid3{display:block}.upload{margin-top:16px}.panel{margin-top:14px}.navyear{margin-left:0}}
+</style>
+</head>
 <body>
 <div class="app">
   <div class="top">
-    <div class="title"><h1>Irish eToro Tax Assistant</h1><p>Upload eToro annual XLSX statements and produce a repeatable Irish investment-tax review.</p></div>
-    <div class="upload"><label for="files">Upload eToro XLSX files</label><input id="files" type="file" accept=".xlsx,.xls" multiple><div class="hint">Works with one year or multiple years (e.g. 2023–2025). Processing happens in your browser.</div></div>
+    <div class="title"><p style="margin:0 0 6px;font-size:13px"><a href="index.html" style="color:var(--accent)">← irish-etoro-tax</a> · <span style="color:var(--warn);font-weight:700">Demo · not tax advice</span></p><h1>Irish etoro Tax Assistant</h1><p>Upload etoro annual statements, add trades from other brokers, and get an Irish CGT, dividend and exit-tax estimate.</p></div>
+    <div class="upload"><label for="files">Upload etoro XLSX statements</label><input id="files" type="file" accept=".xlsx" multiple>
+      <div class="hint">Add one or several years (e.g. 2023–2025). Files are read in your browser and never uploaded.<br>Use another broker? Open <a href="#" onclick="app.tab('manual');return false">Manual entry</a>.</div>
+      <div id="files-status" class="hint"></div></div>
   </div>
   <nav id="nav"></nav>
   <main id="content"></main>
-  <div class="footer">Important: this is a tax-analysis aid, not a tax return. It deliberately flags cases where eToro data is insufficient to prove the Irish statutory treatment. Current Revenue guidance should be checked before filing.</div>
+  <div class="footer">Demo built for Irish retail investors. Not tax advice and not a tax return. Always consult a qualified accountant for complex situations. EUR conversions use ECB reference rates.</div>
 </div>
 <script>
-const state={files:[],years:{},active:'dashboard',allStocks:[],allDivs:[],allOther:[],flags:[]};
-const tabs=[['dashboard','Dashboard'],['annual','Annual Summary'],['cgt','CGT Detail'],['dividends','Dividends'],['transactions','Transactions'],['review','Review Flags']];
-function euro(x){return new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR',maximumFractionDigits:2}).format(x||0)}
-function n(x){return Number(x)||0}
-function dt(v){ if(v instanceof Date) return v; if(typeof v==='number'){return new Date(Date.UTC(1899,11,30)+v*86400000)}; if(!v) return null; let d=new Date(v); if(!isNaN(d)) return d; const m=String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m?new Date(+m[3],+m[2]-1,+m[1]):null }
-function iso(d){return d?d.toISOString().slice(0,10):''}
-function days(a,b){return Math.round((b-a)/86400000)}
-function getSheet(wb,name){const s=wb.Sheets[name]; return s?XLSX.utils.sheet_to_json(s,{defval:null,raw:true}):[]}
-function col(row,names){for(const x of names){if(Object.prototype.hasOwnProperty.call(row,x))return row[x]} return null}
-function parseNumber(v){if(v===null||v===undefined||v==='')return 0; if(typeof v==='number')return v; return parseFloat(String(v).replace(/,/g,''))||0}
-async function parseFile(file){const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{cellDates:true}); const y=(file.name.match(/(20\d{2})/)||[])[1] || 'Unknown';
- let closed=getSheet(wb,'Closed Positions');
- closed=closed.filter(r=>String(col(r,['Type','Asset type'])||'').toLowerCase()==='stocks' || String(col(r,['Type','Asset type'])||'').toLowerCase().includes('stock'));
- const tx=closed.map(r=>{const open=dt(col(r,['Open Date'])), close=dt(col(r,['Close Date']));return {year:+y,ticker:col(r,['ISIN'])||col(r,['Action'])||'',asset:col(r,['Action'])||'',position:col(r,['Position ID']),open,close,units:parseNumber(col(r,['Units / Contracts'])),profitEUR:parseNumber(col(r,['Profit(EUR)'])),profitUSD:parseNumber(col(r,['Profit(USD)'])),openRate:parseNumber(col(r,['Open Rate'])),closeRate:parseNumber(col(r,['Close Rate'])),overnight:parseNumber(col(r,['Overnight Fees and Dividends'])),notes:col(r,['Notes'])||'',type:'Stocks'};}).filter(r=>r.close);
- const div=getSheet(wb,'Dividends').filter(r=>String(col(r,['Type','Asset type'])||'').toLowerCase().includes('stock')).map(r=>({year:+y,date:dt(col(r,['Date of Payment'])),asset:col(r,['Instrument Name']),isin:col(r,['ISIN']),netEUR:parseNumber(col(r,['Net Dividend Received (EUR)'])),wtEUR:parseNumber(col(r,['Withholding Tax Amount (EUR)'])),rate:col(r,['Withholding Tax Rate (%)'])}));
- const fs=getSheet(wb,'Financial Summary'); const summary={}; fs.forEach(r=>{summary[r['Name']]=parseNumber(r['Amount\n in (EUR)'])});
- const holdings=getSheet(wb,'Holdings').filter(r=>String(r['Type']||'').toLowerCase().includes('stock'));
- return {name:file.name,year:+y,tx,div,summary,holdings,count:closed.length};
-}
-function build(){state.allStocks=Object.values(state.years).flatMap(x=>x.tx).sort((a,b)=>a.close-b.close);state.allDivs=Object.values(state.years).flatMap(x=>x.div).sort((a,b)=>a.date-b.date);state.allOther=Object.values(state.years).map(x=>({year:x.year,cfds:x.summary['CFDs (Profit or Loss)']||0,crypto:x.summary['Crypto (Profit or Loss)']||0,etf:x.summary['ETFs (Profit or Loss)']||0}));
- // Approximate four-week rule: identify same-ISIN acquisitions visible in the uploaded Closed Positions (open date) within 28 days after a disposal.
- state.allStocks.forEach(s=>{s.reacq=state.allStocks.some(b=>b.ticker===s.ticker&&b.open&&s.close&&b.open>s.close&&days(s.close,b.open)<=28);s.pre4=s.open&&s.close&&days(s.open,s.close)<=28;s.flag=s.reacq||s.pre4;});
- state.flags=[]; state.allStocks.filter(x=>x.reacq).forEach(x=>state.flags.push({...x,reason:'Potential four-week reacquisition after disposal'}));
- state.allStocks.filter(x=>x.pre4).forEach(x=>state.flags.push({...x,reason:'Disposed within four weeks of acquisition'}));
- render();
-}
-function yearRows(){return Object.values(state.years).sort((a,b)=>a.year-b.year).map(x=>{const gains=x.tx.filter(t=>t.profitEUR>0).reduce((s,t)=>s+t.profitEUR,0);const losses=x.tx.filter(t=>t.profitEUR<0).reduce((s,t)=>s+t.profitEUR,0);const net=gains+losses;const div=x.div.reduce((s,d)=>s+d.netEUR,0)+x.div.reduce((s,d)=>s+d.wtEUR,0);return {year:x.year,gains,losses,net,div};})}
-function render(){document.getElementById('nav').innerHTML=tabs.map(([id,label])=>`<button class="tab ${state.active===id?'active':''}" onclick="state.active='${id}';render()">${label}</button>`).join('');document.getElementById('content').innerHTML=views[state.active]();}
-const views={
-dashboard(){const yrs=yearRows();const net3=yrs.reduce((s,r)=>s+r.net,0);const div3=yrs.reduce((s,r)=>s+r.div,0);const flags=state.flags.length;const stockCount=state.allStocks.length; const latest=yrs[yrs.length-1];
-return `<div class="panel"><div class="callout ${net3<0?'':'warn'}"><b>3-year position:</b> ${net3<0?'Net broker-reported stock P/L is negative across the uploaded period.':'Net broker-reported stock P/L is positive across the uploaded period.'} This is a screening figure, not the final Irish CGT calculation.</div></div>
-<div class="kpis"><div class="kpi"><div class="label">Years loaded</div><div class="value">${yrs.length}</div><div class="sub">${yrs.map(r=>r.year).join(' · ')||'—'}</div></div><div class="kpi"><div class="label">Stock disposals</div><div class="value">${stockCount.toLocaleString()}</div><div class="sub">Closed Positions marked Stocks</div></div><div class="kpi"><div class="label">Net stock P/L</div><div class="value">${euro(net3)}</div><div class="sub">eToro Profit(EUR) sum</div></div><div class="kpi"><div class="label">Dividend cash received</div><div class="value">${euro(div3)}</div><div class="sub">Net + foreign withholding</div></div><div class="kpi"><div class="label">Potential 4-week flags</div><div class="value">${flags}</div><div class="sub">Requires Irish-rule review</div></div><div class="kpi"><div class="label">Latest-year estimated CGT</div><div class="value">${latest?euro(Math.max(0,latest.net-1270)*0.33):'—'}</div><div class="sub">Simple screen only; see Annual Summary</div></div></div>
-<div class="grid2"><div class="panel"><h2>Annual stock activity</h2>${yrs.length?yrs.map(r=>`<div class="barrow"><span>${r.year}</span><div class="bar"><span style="width:${Math.min(100,Math.abs(r.net)/Math.max(1,...yrs.map(z=>Math.abs(z.net)))*100)}%"></span></div><span class="right">${euro(r.net)}</span></div>`).join(''):'<div class="muted">Upload an eToro XLSX to begin.</div>'}</div>
-<div class="panel"><h2>What needs attention</h2><div class="small"><p>🟢 <b>Broker data:</b> underlying Closed Positions and Dividends are loaded.</p><p>🟠 <b>Irish matching:</b> FIFO and four-week treatment needs care where the broker export does not contain the complete acquisition history.</p><p>🟠 <b>FX:</b> verify the EUR basis used for each disposal if the calculation is being prepared for filing.</p><p>🟠 <b>Other assets:</b> ETFs, crypto and CFDs are kept separate because their Irish tax treatment may differ.</p></div></div></div>
-<div class="panel"><h2>Recommended workflow</h2><div class="grid3"><div><b>1. Upload</b><div class="small muted">Add one or multiple annual eToro statements.</div></div><div><b>2. Review</b><div class="small muted">Check CGT matching, 4-week flags, dividends and reconciliation gaps.</div></div><div><b>3. Export</b><div class="small muted">Use the detailed tables as your accountant working paper.</div></div></div></div>`},
-annual(){const yrs=yearRows();let priorLoss=0;return `<div class="panel"><h2>Annual tax screening</h2><div class="tablewrap"><table><thead><tr><th>Year</th><th class="right">Gross gains</th><th class="right">Gross losses</th><th class="right">Net gain/(loss)</th><th class="right">Prior loss used</th><th class="right">Exemption</th><th class="right">Screened taxable gain</th><th class="right">Screened CGT @ 33%</th><th class="right">Dividends</th></tr></thead><tbody>${yrs.map(r=>{const used=Math.min(priorLoss,Math.max(0,r.net)); const after=Math.max(0,r.net-used); const taxable=Math.max(0,after-1270); const tax=taxable*.33; if(r.net<0)priorLoss+=-r.net; else priorLoss=Math.max(0,priorLoss-used); return `<tr><td>${r.year}</td><td class="num">${euro(r.gains)}</td><td class="num">${euro(r.losses)}</td><td class="num">${euro(r.net)}</td><td class="num">${euro(used)}</td><td class="num">${euro(1270)}</td><td class="num">${euro(taxable)}</td><td class="num">${euro(tax)}</td><td class="num">${euro(r.div)}</td></tr>`}).join('')}</tbody></table></div><div class="hint">The CGT column is a simplified screening calculation using broker-reported EUR P/L and does not apply full Irish share matching rules. It is intentionally conservative as a review aid.</div></div>
-<div class="panel"><h2>Loss carry-forward screen</h2><p class="small">This follows the net broker-reported stock result year by year. The separate CGT Detail tab contains four-week review flags that can change the usable loss figure.</p></div>`},
-cgt(){const rows=state.allStocks;const gains=rows.filter(x=>x.profitEUR>0).reduce((s,x)=>s+x.profitEUR,0),losses=rows.filter(x=>x.profitEUR<0).reduce((s,x)=>s+x.profitEUR,0);const flagged=rows.filter(x=>x.flag).length;return `<div class="panel"><h2>Capital Gains Tax detail</h2><div class="kpis"><div class="kpi"><div class="label">Gross gains</div><div class="value">${euro(gains)}</div></div><div class="kpi"><div class="label">Gross losses</div><div class="value">${euro(losses)}</div></div><div class="kpi"><div class="label">Net</div><div class="value">${euro(gains+losses)}</div></div><div class="kpi"><div class="label">4-week review</div><div class="value">${flagged}</div></div><div class="kpi"><div class="label">Annual exemption</div><div class="value">€1,270</div></div><div class="kpi"><div class="label">Indicative CGT</div><div class="value">${euro(Math.max(0,gains+losses-1270)*.33)}</div></div></div></div>
-<div class="panel"><h2>Transaction audit</h2><div class="controls"><input class="search" id="cgtSearch" placeholder="Search company / ISIN / position" oninput="renderCgtTable()"><span class="muted small">Showing up to 1,500 rows</span></div><div id="cgtTable"></div></div>`},
-dividends(){const d=state.allDivs;const net=d.reduce((s,x)=>s+x.netEUR,0), wt=d.reduce((s,x)=>s+x.wtEUR,0);return `<div class="panel"><h2>Dividend summary</h2><div class="kpis"><div class="kpi"><div class="label">Net dividends</div><div class="value">${euro(net)}</div></div><div class="kpi"><div class="label">Foreign withholding</div><div class="value">${euro(wt)}</div></div><div class="kpi"><div class="label">Gross-equivalent screen</div><div class="value">${euro(net+wt)}</div></div><div class="kpi"><div class="label">Payments</div><div class="value">${d.length}</div></div></div></div><div class="panel"><h2>Dividend detail</h2><div class="tablewrap"><table><thead><tr><th>Date</th><th>Instrument</th><th>ISIN</th><th class="right">Net EUR</th><th class="right">WHT EUR</th><th>Rate</th></tr></thead><tbody>${d.map(x=>`<tr><td>${iso(x.date)}</td><td>${x.asset||''}</td><td class="mono">${x.isin||''}</td><td class="num">${euro(x.netEUR)}</td><td class="num">${euro(x.wtEUR)}</td><td>${x.rate||''}</td></tr>`).join('')}</tbody></table></div></div>`},
-transactions(){return `<div class="panel"><h2>All uploaded stock disposals</h2><div class="tablewrap"><table><thead><tr><th>Year</th><th>Close</th><th>Asset</th><th>ISIN</th><th class="right">Units</th><th class="right">P/L EUR</th><th>Open</th><th>Review</th></tr></thead><tbody>${state.allStocks.map(x=>`<tr><td>${x.year}</td><td>${iso(x.close)}</td><td>${x.asset}</td><td class="mono">${x.ticker}</td><td class="num">${x.units.toFixed(6)}</td><td class="num">${euro(x.profitEUR)}</td><td>${iso(x.open)}</td><td>${x.reacq?'<span class="badge warn">4W reacq</span>':x.pre4?'<span class="badge neutral">&lt;4W hold</span>':'<span class="badge good">OK</span>'}</td></tr>`).join('')}</tbody></table></div></div>`},
-review(){return `<div class="panel"><h2>Review flags</h2><div class="callout warn">These are prompts for human review, not automatic tax conclusions. The app cannot prove the complete historical acquisition chain from annual eToro statements alone.</div><div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Year</th><th>Close</th><th>Asset</th><th>ISIN</th><th class="right">P/L EUR</th><th>Flag</th></tr></thead><tbody>${state.flags.length?state.flags.map(x=>`<tr><td>${x.year}</td><td>${iso(x.close)}</td><td>${x.asset}</td><td class="mono">${x.ticker}</td><td class="num">${euro(x.profitEUR)}</td><td><span class="badge warn">${x.reason}</span></td></tr>`).join(''):'<tr><td colspan="6" class="muted">No automated flags identified.</td></tr>'}</tbody></table></div></div><div class="panel"><h2>Always check separately</h2><div class="small"><p>Corporate actions and reorganisations</p><p>Transfers between brokers/accounts</p><p>Missing acquisition history before the first uploaded year</p><p>FX methodology and allowable transaction costs</p><p>ETFs, crypto, CFDs and other non-stock instruments</p><p>Foreign dividend tax-credit/treaty treatment</p></div></div>`}
+'use strict';
+// ------------------------------------------------------------------ rules
+const CGT_RATE = 0.33, EXEMPTION = 1270, FOUR_WEEKS = 28, DD_YEARS = 8;
+const EEA = new Set('IE LU DE FR NL AT BE DK FI SE ES PT IT GR CY MT EE LV LT PL CZ SK SI HU HR RO BG NO IS LI'.split(' '));
+// Portfolio dividend WHT rates under Ireland's tax treaties, by ISIN country. Missing = no treaty assumed.
+const TREATY = {US:.15,CA:.15,ES:.15,NO:.15,FR:.15,DK:.15,CH:.15,DE:.15,NL:.15,FI:.15,SE:.15,LU:.15,IT:.15,BE:.15,
+  PT:.15,AT:.10,JP:.15,AU:.15,NZ:.15,GB:.15,AE:0,IL:.15,KR:.15,SG:0,HK:0,CN:.10,IN:.10};
+const exitTaxRate = d => d >= '2026-01-01' ? 0.38 : 0.41;  // 41% to end-2025, 38% from 2026 (Budget 2026)
+const prsiOn = d => d >= '2025-10-01' ? 0.042 : d >= '2024-10-01' ? 0.041 : 0.04;
+const regimeFor = isin => { const p = (isin || '').slice(0, 2).toUpperCase();
+  return EEA.has(p) ? 'Exit tax' : p === 'US' ? 'CGT (US-domiciled)' : 'Check (non-EEA)'; };
+const ASSET_TYPES = [['Stocks', 'Shares'], ['ETF', 'ETF / fund'], ['Crypto', 'Crypto'], ['CFD', 'CFD'], ['Other', 'Other asset']];
+
+// ------------------------------------------------------------------ state
+const state = {
+  files: {},                                   // year -> parsed etoro statement
+  manual: {disposals: [], dividends: []},
+  settings: {incomeTax: 0.40, usc: 0.08, prsi: 'auto', lossesBf: 0},
+  active: 'dashboard', year: null, search: '', result: null, error: '', formError: {}, nextId: 1, unsaved: false,
 };
-function renderCgtTable(){const q=(document.getElementById('cgtSearch')?.value||'').toLowerCase();const rows=state.allStocks.filter(x=>(x.asset+' '+x.ticker+' '+x.position).toLowerCase().includes(q)).slice(0,1500);document.getElementById('cgtTable').innerHTML=`<div class="tablewrap"><table><thead><tr><th>Year</th><th>Close</th><th>Asset</th><th>ISIN</th><th class="right">P/L EUR</th><th>Open</th><th>4W</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.year}</td><td>${iso(x.close)}</td><td>${x.asset}</td><td class="mono">${x.ticker}</td><td class="num">${euro(x.profitEUR)}</td><td>${iso(x.open)}</td><td>${x.flag?'<span class="badge warn">Review</span>':'<span class="badge good">OK</span>'}</td></tr>`).join('')}</tbody></table></div>`}
-document.getElementById('files').addEventListener('change',async e=>{const files=[...e.target.files];state.files=files;state.years={};for(const f of files){const x=await parseFile(f);if(x.year)state.years[x.year]=x;}build(); if(state.active==='cgt')renderCgtTable();});
-window.renderCgtTable=renderCgtTable;
-render();
-</script></body></html>
+
+// ------------------------------------------------------------------ helpers
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtEur = new Intl.NumberFormat('en-IE', {style: 'currency', currency: 'EUR'});
+const euro = x => fmtEur.format(Math.abs(x) < 0.005 ? 0 : x || 0);
+const pct = x => `${(x * 100).toFixed(x * 100 % 1 ? 1 : 0)}%`;
+const num = v => { if (typeof v === 'number') return v; const n = parseFloat(String(v ?? '').replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; };
+const sum = (xs, f) => xs.reduce((s, x) => s + f(x), 0);
+const signed = x => `<td class="num ${x > 0.005 ? 'pos' : x < -0.005 ? 'neg' : ''}">${euro(x)}</td>`;
+const money = x => `<td class="num">${euro(x)}</td>`;
+const kpi = (label, value, sub = '', cls = '') => `<div class="kpi"><div class="label">${label}</div><div class="value ${cls}">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+const dayNum = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 86400000;
+const fromDayNum = n => new Date(n * 86400000).toISOString().slice(0, 10);
+const serialDate = n => fromDayNum(Math.floor(n) - 25569);  // Excel serial -> ISO
+const validIso = s => /^\d{4}-\d\d-\d\d$/.test(s) && fromDayNum(dayNum(s)) === s;
+function etoroDate(v) {
+  if (typeof v === 'number') return serialDate(v);
+  const s = String(v || '').trim(), m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  return /^\d{4}-\d\d-\d\d/.test(s) ? s.slice(0, 10) : null;
+}
+function addYears(s, y) {
+  const yy = +s.slice(0, 4) + y, md = s.slice(5);
+  return md === '02-29' && !validIso(`${yy}-02-29`) ? `${yy}-02-28` : `${yy}-${md}`;
+}
+function table(head, rows, numeric = [], sortable = true) {
+  const ths = head.map((h, i) => `<th class="${numeric.includes(i) ? 'num' : ''}">${h}</th>`).join('');
+  return `<div class="tablewrap"><table class="${sortable ? 'sortable' : ''}"><thead><tr>${ths}</tr></thead><tbody>${rows.join('') || `<tr><td colspan="${head.length}" class="muted">Nothing to show.</td></tr>`}</tbody></table></div>`;
+}
+
+// ------------------------------------------------------------------ FX (ECB, USD per EUR)
+const FX = {days: [], rates: []};
+(function loadBundled() {
+  const r = window.ECB_USD_RATES; if (!r) return;
+  let d = dayNum(r.start);
+  for (const [gap, rate] of r.pairs) { d += gap; FX.days.push(d); FX.rates.push(rate); }
+})();
+function usdPerEur(iso) {
+  const d = dayNum(iso); let lo = 0, hi = FX.days.length - 1, i = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (FX.days[m] <= d) { i = m; lo = m + 1; } else hi = m - 1; }
+  if (i < 0 || d - FX.days[i] > 7) throw new Error(`No ECB USD rate on or shortly before ${iso}.`);
+  return FX.rates[i];
+}
+const toEur = (amount, iso, currency = 'USD') => currency === 'EUR' ? amount : amount / usdPerEur(iso);
+async function ensureRates(dates) {
+  // Only fetch if a date falls outside the bundled range. The request carries no personal data.
+  if (!dates.length) return;
+  const lo = dayNum(dates.reduce((a, b) => a < b ? a : b)), hi = dayNum(dates.reduce((a, b) => a > b ? a : b));
+  const first = FX.days[0] ?? Infinity, last = FX.days[FX.days.length - 1] ?? -Infinity;
+  if (lo >= first && hi <= last + 3) return;
+  const start = fromDayNum(Math.min(lo, first) - 14);
+  const res = await fetch(`https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=${start}&format=csvdata`);
+  if (!res.ok) throw new Error(`Couldn't download ECB rates (HTTP ${res.status}).`);
+  const rows = parseCsv(await res.text()), h = rows[0], ti = h.indexOf('TIME_PERIOD'), vi = h.indexOf('OBS_VALUE');
+  const merged = new Map(FX.days.map((d, i) => [d, FX.rates[i]]));
+  for (const r of rows.slice(1)) if (r[vi]) merged.set(dayNum(r[ti]), +r[vi]);
+  FX.days = [...merged.keys()].sort((a, b) => a - b); FX.rates = FX.days.map(d => merged.get(d));
+}
+
+// ------------------------------------------------------------------ CSV
+function parseCsv(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+const csvCell = v => /[",\n]/.test(String(v ?? '')) ? `"${String(v).replace(/"/g, '""')}"` : String(v ?? '');
+function download(name, rows) {
+  const blob = new Blob([rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n'], {type: 'text/csv'});
+  const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: name});
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ------------------------------------------------------------------ etoro parsing
+async function parseStatement(file) {
+  const wb = XLSX.read(await file.arrayBuffer());
+  const sheet = name => wb.Sheets[name] ? XLSX.utils.sheet_to_json(wb.Sheets[name], {defval: '', raw: true}) : [];
+  if (!wb.Sheets['Closed Positions']) throw new Error(`${file.name} doesn't look like an etoro account statement.`);
+  let start = null, end = null;
+  if (wb.Sheets['Account Summary']) for (const r of XLSX.utils.sheet_to_json(wb.Sheets['Account Summary'], {header: 1, defval: ''})) {
+    const k = String(r[0]).trim();
+    if (k === 'Start Date') start = etoroDate(r[1]);
+    if (k === 'End Date') end = etoroDate(r[1]);
+  }
+  if (!start) { const y = (file.name.match(/(20\d{2})/) || [])[1]; if (!y) throw new Error(`Can't tell which year ${file.name} covers.`); start = `${y}-01-01`; end = `${y}-12-31`; }
+  return {name: file.name, start, end, year: +start.slice(0, 4),
+          closed: sheet('Closed Positions'), holdings: sheet('Holdings'), activity: sheet('Account Activity'), dividends: sheet('Dividends')};
+}
+
+function neededDates() {
+  const out = [];
+  for (const s of Object.values(state.files)) {
+    for (const r of s.closed) { const o = etoroDate(r['Open Date']), c = etoroDate(r['Close Date']); if (o) out.push(o); if (c) out.push(c); }
+    for (const r of s.holdings) { const o = etoroDate(r['Open Date']), d = etoroDate(r['Snapshot Date']); if (o && String(r.Type).toUpperCase() === 'ETF') out.push(o, d); }
+  }
+  for (const d of state.manual.disposals) if (d.currency === 'USD') out.push(d.acquired, d.disposed);
+  for (const d of state.manual.dividends) if (d.currency === 'USD') out.push(d.paid);
+  return out.filter(Boolean);
+}
+
+// ------------------------------------------------------------------ computation
+function cgtCompute(gains, losses, bf) {
+  let net = gains - losses;
+  if (net <= 0) return {gains, losses, bf, used: 0, exemption: 0, taxable: 0, tax: 0, cf: bf - net};
+  const used = Math.min(bf, net); net -= used;
+  const exemption = Math.min(EXEMPTION, net), taxable = net - exemption;
+  return {gains, losses, bf, used, exemption, taxable, tax: taxable * CGT_RATE, cf: bf - used};
+}
+
+function compute() {
+  const stmts = Object.values(state.files).sort((a, b) => a.start < b.start ? -1 : 1);
+  // History across statements: what was paid per position, and when each ISIN was bought.
+  const openings = new Map(), acq = new Map(), seen = new Set();
+  const addAcq = (isin, date, pid) => { if (!isin || !date || seen.has(pid)) return; seen.add(pid);
+    if (!acq.has(isin)) acq.set(isin, []); acq.get(isin).push([dayNum(date), pid]); };
+  for (const s of stmts) {
+    for (const r of s.activity) if (r.Type === 'Open Position') openings.set(String(r['Position ID']), {amount: num(r.Amount), units: num(r['Units / Contracts'])});
+    for (const r of [...s.closed, ...s.holdings]) addAcq(String(r.ISIN || ''), etoroDate(r['Open Date']), String(r['Position ID']));
+  }
+  for (const m of state.manual.disposals) addAcq(m.isin.toUpperCase(), m.acquired, `M${m.id}`);
+  const boughtNear = (isin, on, pid) => (acq.get(isin) || []).some(([d, p]) => p !== pid && Math.abs(d - dayNum(on)) <= FOUR_WEEKS);
+
+  // Disposals
+  const disposals = [];
+  for (const s of stmts) for (const r of s.closed) {
+    const opened = etoroDate(r['Open Date']), closed = etoroDate(r['Close Date']); if (!opened || !closed) continue;
+    const type = String(r.Type || ''), isin = String(r.ISIN || ''), lev = num(r.Leverage) || 1;
+    const short = String(r['Long / Short']).trim().toLowerCase() === 'short';
+    const costUsd = num(r.Amount), profitUsd = num(r['Profit(USD)']);
+    const d = {year: s.year, source: 'etoro', id: String(r['Position ID']), name: String(r.Action || ''), isin, type, opened, closed,
+               units: num(r['Units / Contracts']), etoroEur: num(r['Profit(EUR)']), marginOnly: type === 'CFD' || lev !== 1 || short};
+    if (d.marginOnly) { d.gain = toEur(profitUsd, closed); d.costEur = d.proceedsEur = null; }
+    else { d.costEur = toEur(costUsd, opened); d.proceedsEur = toEur(costUsd + profitUsd, closed); d.gain = d.proceedsEur - d.costEur; }
+    disposals.push(d);
+  }
+  for (const m of state.manual.disposals) {
+    const costEur = toEur(m.cost, m.acquired, m.currency), proceedsEur = toEur(m.proceeds, m.disposed, m.currency) - toEur(m.fees, m.disposed, m.currency);
+    disposals.push({year: +m.disposed.slice(0, 4), source: m.broker || 'Manual', id: `M${m.id}`, manualId: m.id, name: m.asset, isin: m.isin.toUpperCase(),
+                    type: m.type, opened: m.acquired, closed: m.disposed, units: m.units, etoroEur: null, marginOnly: false,
+                    costEur, proceedsEur, gain: proceedsEur - costEur});
+  }
+  for (const d of disposals) {
+    if (d.type === 'ETF') { const r = regimeFor(d.isin); d.regime = r === 'Exit tax' ? 'Exit tax' : 'CGT';
+      d.note = r === 'Exit tax' ? '' : r.startsWith('CGT') ? 'US-domiciled ETF' : 'Non-EEA product, check treatment'; }
+    else { d.regime = 'CGT'; d.note = d.type === 'Other' ? 'Check treatment' : ''; }
+    // 4-week rule (s.581 TCA): shares only, and exit-tax funds get no loss relief anyway.
+    d.restricted = d.gain < 0 && d.regime === 'CGT' && (d.type === 'Stocks' || d.type === 'ETF') && !!d.isin && boughtNear(d.isin, d.closed, d.id);
+    d.initial = d.closed.slice(5) <= '11-30';
+    d.exitTax = d.regime === 'Exit tax' ? Math.max(d.gain, 0) * exitTaxRate(d.closed) : 0;
+  }
+  disposals.sort((a, b) => a.closed < b.closed ? -1 : a.closed > b.closed ? 1 : a.name.localeCompare(b.name));
+
+  // Dividends
+  const S = state.settings, divs = [];
+  for (const s of stmts) for (const r of s.dividends) {
+    const paid = etoroDate(r['Date of Payment']); if (!paid) continue;
+    const t = String(r.Type || '').toUpperCase(), isin = String(r.ISIN || '');
+    const category = t === 'CFD' ? 'CFD dividend equivalent' : t === 'ETF' && regimeFor(isin) === 'Exit tax' ? 'Fund distribution (exit tax)' : 'Dividend';
+    divs.push({year: s.year, source: 'etoro', paid, name: String(r['Instrument Name'] || ''), isin, category,
+               net: num(r['Net Dividend Received (EUR)']), wht: num(r['Withholding Tax Amount (EUR)']), whtRate: num(r['Withholding Tax Rate (%)']) / 100});
+  }
+  for (const m of state.manual.dividends) {
+    const net = toEur(m.net, m.paid, m.currency), wht = toEur(m.wht, m.paid, m.currency);
+    divs.push({year: +m.paid.slice(0, 4), source: m.broker || 'Manual', manualId: m.id, paid: m.paid, name: m.asset, isin: m.isin.toUpperCase(),
+               category: m.type === 'Fund distribution' ? 'Fund distribution (exit tax)' : 'Dividend', net, wht, whtRate: net + wht ? wht / (net + wht) : 0});
+  }
+  for (const d of divs) assessDividend(d, S);
+  divs.sort((a, b) => a.paid < b.paid ? -1 : a.paid > b.paid ? 1 : 0);
+
+  // CGT by year, chained so unused losses carry forward
+  const years = [...new Set([...disposals.map(d => d.year), ...divs.map(d => d.year), ...stmts.map(s => s.year)])].sort();
+  const chain = conservative => {
+    let carry = num(S.lossesBf); const out = {};
+    for (const y of years) {
+      const ch = disposals.filter(d => d.year === y && d.regime === 'CGT');
+      const calc = ds => cgtCompute(sum(ds.filter(d => d.gain > 0), d => d.gain),
+                                    -sum(ds.filter(d => d.gain < 0 && !(conservative && d.restricted)), d => d.gain), carry);
+      const full = calc(ch), initial = calc(ch.filter(d => d.initial));
+      out[y] = {year: y, count: ch.length, full, initial, later: full.tax - initial.tax, restricted: -sum(ch.filter(d => d.restricted), d => d.gain)};
+      carry = full.cf;
+    }
+    return out;
+  };
+
+  // ETF lots in the latest statement's last Holdings snapshot
+  const latest = stmts[stmts.length - 1], lots = [];
+  let snapshot = latest ? latest.end : null;
+  if (latest) {
+    const rows = latest.holdings.filter(r => String(r.Type).toUpperCase() === 'ETF');
+    if (rows.length) {
+      const snapNum = Math.max(...rows.map(r => num(r['Snapshot Date']))); snapshot = serialDate(snapNum);
+      for (const r of rows.filter(r => num(r['Snapshot Date']) === snapNum)) {
+        const purchased = etoroDate(r['Open Date']), units = num(r.Units), valueUsd = num(r['Value in USD']);
+        const o = openings.get(String(r['Position ID']));
+        const costUsd = o && o.units ? o.amount * units / o.units
+          : (num(r['Current Rate']) ? valueUsd * num(r['Open Rate']) / num(r['Current Rate']) : 0);
+        const isin = String(r.ISIN || ''), regime = regimeFor(isin), dd = addYears(purchased, DD_YEARS);
+        const cost = toEur(costUsd, purchased), value = toEur(valueUsd, snapshot);
+        lots.push({purchased, name: String(r.Asset || ''), isin, units, cost, value, gain: value - cost, regime, dd, estimated: !o,
+                   exitTax: regime === 'Exit tax' ? Math.max(value - cost, 0) * exitTaxRate(dd) : 0});
+      }
+      lots.sort((a, b) => a.dd < b.dd ? -1 : a.dd > b.dd ? 1 : a.name.localeCompare(b.name));
+    }
+  }
+  return {stmts, years, disposals, divs, cgt: chain(false), cgtC: chain(true), lots, snapshot};
+}
+
+function assessDividend(d, S) {
+  d.gross = d.net + d.wht; d.country = d.isin ? d.isin.slice(0, 2).toUpperCase() : '??';
+  d.incomeTax = d.credit = d.usc = d.prsi = d.exitTax = 0; d.treaty = null; d.flag = '';
+  if (d.category === 'Fund distribution (exit tax)') { d.exitTax = d.gross * exitTaxRate(d.paid); }
+  else {
+    d.incomeTax = d.gross * S.incomeTax; d.usc = d.gross * S.usc; d.prsi = d.gross * (S.prsi === 'auto' ? prsiOn(d.paid) : num(S.prsi));
+    if (d.category === 'CFD dividend equivalent') d.flag = "CFD: etoro's deduction is not a foreign tax, so no credit";
+    else if (d.country === 'IE') { d.credit = d.wht; d.flag = d.wht ? 'Irish DWT: credited in full' : ''; }
+    else if (!(d.country in TREATY)) d.flag = d.wht ? `No treaty rate for ${d.country}, so no credit. Check` : '';
+    else {
+      d.treaty = TREATY[d.country]; d.credit = Math.min(d.wht, d.treaty * d.gross, d.incomeTax);
+      if (d.whtRate > d.treaty + 0.005) d.flag = `WHT ${pct(d.whtRate)} above treaty ${pct(d.treaty)}, excess reclaimable at source`;
+    }
+  }
+  d.excess = d.category === 'Dividend' ? Math.max(d.wht - d.credit, 0) : d.wht;
+  d.irishTax = d.incomeTax - d.credit + d.usc + d.prsi + d.exitTax;
+}
+const divTotals = items => ({count: items.length, net: sum(items, d => d.net), wht: sum(items, d => d.wht), gross: sum(items, d => d.gross),
+  incomeTax: sum(items, d => d.incomeTax), credit: sum(items, d => d.credit), excess: sum(items, d => d.excess), usc: sum(items, d => d.usc),
+  prsi: sum(items, d => d.prsi), exitTax: sum(items, d => d.exitTax), irishTax: sum(items, d => d.irishTax)});
+function groupBy(items, key) {
+  const g = new Map(); for (const x of items) { const k = key(x); if (!g.has(k)) g.set(k, []); g.get(k).push(x); }
+  return [...g.entries()].map(([k, v]) => [k, divTotals(v)]).sort((a, b) => b[1].gross - a[1].gross);
+}
+
+// ------------------------------------------------------------------ refresh / render
+async function refresh() {
+  state.error = '';
+  try { await ensureRates(neededDates()); state.result = compute(); }
+  catch (e) { state.error = e.message; state.result = null; }
+  const ys = state.result ? state.result.years : [];
+  if (!ys.includes(state.year)) state.year = ys[ys.length - 1] ?? null;
+  render();
+}
+const TABS = [['dashboard', 'Dashboard'], ['cgt', 'CGT by year'], ['disposals', 'Disposals'], ['dividends', 'Dividends'],
+              ['etf', 'ETFs & exit tax'], ['manual', 'Manual entry'], ['review', 'Review flags'], ['settings', 'Settings']];
+function render() {
+  const ys = state.result ? state.result.years : [];
+  document.getElementById('nav').innerHTML = TABS.map(([id, label]) =>
+    `<button class="tab ${state.active === id ? 'active' : ''}" onclick="app.tab('${id}')">${label}</button>`).join('') +
+    (ys.length ? `<span class="navyear">Tax year <select onchange="app.setYear(this.value)">${ys.map(y => `<option ${y === state.year ? 'selected' : ''}>${y}</option>`).join('')}</select></span>` : '');
+  const files = Object.values(state.files);
+  document.getElementById('files-status').innerHTML = files.length
+    ? `Loaded: ${files.sort((a, b) => a.year - b.year).map(f => esc(f.name)).join(', ')} · <a href="#" onclick="app.clearFiles();return false">clear</a>` : '';
+  const err = state.error ? `<div class="callout bad">${esc(state.error)}</div>` : '';
+  const empty = !state.result || (!state.result.disposals.length && !state.result.divs.length && !state.result.lots.length);
+  const view = empty && !['manual', 'settings'].includes(state.active) ? views.empty() : views[state.active]();
+  document.getElementById('content').innerHTML = err + view;
+}
+
+const views = {
+  empty() {
+    return `<div class="panel"><h2>Get started</h2>
+      <div class="grid3"><div><b>1. Upload etoro statements</b><div class="small muted">Download the XLSX account statement for each tax year (1 Jan to 31 Dec) and add them above. More years give better loss carry-forward and purchase history.</div></div>
+      <div><b>2. Add other brokers</b><div class="small muted">Use <a href="#" onclick="app.tab('manual');return false">Manual entry</a> for disposals and dividends from any broker not yet supported.</div></div>
+      <div><b>3. Review</b><div class="small muted">Check the CGT, dividend and exit-tax estimates and the review flags, then take them to your return or your accountant.</div></div></div></div>`;
+  },
+
+  dashboard() {
+    const R = state.result, y = state.year, c = R.cgt[y], cc = R.cgtC[y];
+    const dv = divTotals(R.divs.filter(d => d.year === y));
+    const etf = R.disposals.filter(d => d.year === y && d.regime === 'Exit tax'), etfTax = sum(etf, d => d.exitTax);
+    const total = c.full.tax + etfTax + dv.irishTax, totalC = cc.full.tax + etfTax + dv.irishTax;
+    const rows = R.years.map(yr => {
+      const a = R.cgt[yr], b = R.cgtC[yr], dvy = divTotals(R.divs.filter(d => d.year === yr));
+      const et = sum(R.disposals.filter(d => d.year === yr), d => d.exitTax);
+      return `<tr><td>${yr}</td><td class="num">${a.count}</td>${signed(a.full.gains - a.full.losses)}${money(a.full.tax)}${money(b.full.tax)}${money(et)}${money(dvy.irishTax)}<td class="num"><b>${euro(a.full.tax + et + dvy.irishTax)}</b></td>${money(a.full.cf)}</tr>`;
+    });
+    const manualCount = state.manual.disposals.length + state.manual.dividends.length;
+    return `<div class="panel"><h2>${y} at a glance</h2>
+      <div class="kpis">
+        ${kpi(`CGT due 15 Dec ${y}`, euro(c.initial.tax), `Jan–Nov disposals · conservative ${euro(cc.initial.tax)}`)}
+        ${kpi(`CGT due 31 Jan ${y + 1}`, euro(c.later), `December balance · conservative ${euro(cc.later)}`)}
+        ${kpi('Exit tax on ETF disposals', euro(etfTax), `${etf.length} EEA fund disposals`)}
+        ${kpi('Tax on dividends', euro(dv.irishTax), `after ${euro(dv.credit)} foreign tax credit`)}
+        ${kpi(`Total estimate ${y}`, euro(total), `conservative ${euro(totalC)}`)}
+        ${kpi(`Losses to carry into ${y + 1}`, euro(c.full.cf), `conservative ${euro(cc.full.cf)}`)}
+      </div>
+      <div class="small muted">Conservative = losses caught by the 4-week rule are disallowed. Data: ${R.stmts.length} etoro statement(s)${manualCount ? `, ${manualCount} manual entr${manualCount === 1 ? 'y' : 'ies'}` : ''}.</div></div>
+      <div class="panel"><h2>All years</h2>${table(['Year', 'CGT disposals', 'Net gain', 'CGT', 'CGT (conservative)', 'Exit tax (ETF sales)', 'Dividend tax', 'Total', 'Losses c/f'], rows, [1, 2, 3, 4, 5, 6, 7, 8], false)}</div>`;
+  },
+
+  cgt() {
+    const R = state.result, y = state.year, c = R.cgt[y], cc = R.cgtC[y];
+    const head = ['Year', 'Disposals', 'Gains', 'Losses', 'Losses b/f', 'B/f used', 'Exemption', 'Taxable', 'CGT 33%', 'Losses c/f'];
+    const rows = set => R.years.map(yr => { const f = set[yr].full;
+      return `<tr><td>${yr}</td><td class="num">${set[yr].count}</td>${money(f.gains)}${money(-f.losses)}${money(f.bf)}${money(f.used)}${money(f.exemption)}${money(f.taxable)}<td class="num"><b>${euro(f.tax)}</b></td>${money(f.cf)}</tr>`; });
+    const types = new Map();
+    for (const d of R.disposals.filter(d => d.year === y)) {
+      const k = d.regime === 'CGT' ? (ASSET_TYPES.find(t => t[0] === d.type) || [d.type, d.type])[1] : 'ETF (exit tax)';
+      const t = types.get(k) || {n: 0, gains: 0, losses: 0, ecb: 0, etoro: 0, hasEtoro: false, restricted: 0};
+      t.n++; t[d.gain >= 0 ? 'gains' : 'losses'] += d.gain; t.ecb += d.gain;
+      if (d.etoroEur !== null) { t.etoro += d.etoroEur; t.hasEtoro = true; }
+      if (d.restricted) t.restricted -= d.gain; types.set(k, t);
+    }
+    const typeRows = [...types.entries()].sort().map(([k, t]) => `<tr><td>${esc(k)}</td><td class="num">${t.n}</td>${signed(t.gains)}${signed(t.losses)}${signed(t.ecb)}${t.hasEtoro ? signed(t.etoro) : '<td class="num muted">—</td>'}${money(t.restricted)}</tr>`);
+    return `<div class="panel"><h2>Capital Gains Tax</h2>
+      <div class="small muted">Shares, crypto, CFDs and non-EEA ETFs. 33% on gains after current-year losses, then losses brought forward, then the €1,270 annual exemption. Unused losses carry forward. EUR at ECB reference rates.</div>
+      <div class="kpis">
+        ${kpi(`${y} net gain`, euro(c.full.gains - c.full.losses), '', c.full.gains >= c.full.losses ? 'pos' : 'neg')}
+        ${kpi('Initial period (Jan–Nov)', euro(c.initial.tax), `pay by 15 Dec ${y}`)}
+        ${kpi('Later period (Dec)', euro(c.later), `pay by 31 Jan ${y + 1}${c.later < 0 ? ' · negative = overpaid' : ''}`)}
+        ${kpi('Losses flagged (4-week rule)', euro(c.restricted), `${R.disposals.filter(d => d.year === y && d.restricted).length} disposals`)}
+        ${kpi('Extra CGT if restricted', euro(cc.full.tax - c.full.tax), 'conservative minus standard')}
+      </div>
+      <h3>By year: losses allowed in full</h3>${table(head, rows(R.cgt), [1, 2, 3, 4, 5, 6, 7, 8, 9], false)}
+      <h3>By year: conservative (4-week-rule losses disallowed)</h3>${table(head, rows(R.cgtC), [1, 2, 3, 4, 5, 6, 7, 8, 9], false)}
+      <h3>${y} by asset type: ECB method vs etoro's own EUR figures</h3>${table(['Asset type', 'Disposals', 'Gains', 'Losses', 'Net (ECB)', 'Net (etoro EUR)', '4-week losses'], typeRows, [1, 2, 3, 4, 5, 6])}
+      <p class="small muted">etoro converts only the profit, at the close-date rate. Irish CGT compares the EUR cost on the purchase date with the EUR proceeds on the sale date, so the dollar's movement counts too.</p></div>`;
+  },
+
+  disposals() {
+    const R = state.result, y = state.year, q = state.search.toLowerCase();
+    const list = R.disposals.filter(d => d.year === y && (!q || `${d.name} ${d.isin} ${d.id} ${d.source}`.toLowerCase().includes(q)));
+    const rows = list.slice(0, 2000).map(d => `<tr class="${d.regime === 'CGT' ? '' : 'muted'}"><td>${d.closed}</td><td>${d.opened}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.isin)}</td><td>${esc(d.type)}</td><td>${esc(d.source)}</td>
+      <td class="num">${d.units ? (+d.units).toFixed(6) : ''}</td><td class="num">${d.costEur === null ? '—' : euro(d.costEur)}</td><td class="num">${d.proceedsEur === null ? '—' : euro(d.proceedsEur)}</td>
+      ${signed(d.gain)}${d.etoroEur === null ? '<td class="num muted">—</td>' : signed(d.etoroEur)}<td><span class="badge ${d.regime === 'CGT' ? 'neutral' : 'good'}">${d.regime}</span>${d.note ? ` <span class="small muted">${esc(d.note)}</span>` : ''}</td>
+      <td>${d.restricted ? '<span class="badge warn">4-week</span>' : ''}</td></tr>`);
+    return `<div class="panel"><h2>Disposals in ${y}</h2>
+      <div class="controls"><input class="search" id="search" placeholder="Search instrument / ISIN / position / broker" value="${esc(state.search)}" oninput="app.search(this.value)">
+      <span class="small muted">${list.length.toLocaleString()} disposals${list.length > 2000 ? ', showing the first 2,000' : ''}</span>
+      <button class="btn ghost small" onclick="app.exportDisposals()">Download CSV (all years)</button></div>
+      ${table(['Closed', 'Opened', 'Instrument', 'ISIN', 'Type', 'Source', 'Units', 'Cost (EUR)', 'Proceeds (EUR)', 'Gain (ECB)', 'etoro EUR', 'Regime', 'Flag'], rows, [6, 7, 8, 9, 10])}
+      <p class="small muted">For CFDs, leveraged and short positions the stake is only margin, so the USD profit is converted at the close-date rate and cost/proceeds show as —.</p></div>`;
+  },
+
+  dividends() {
+    const R = state.result, y = state.year, S = state.settings, items = R.divs.filter(d => d.year === y), t = divTotals(items);
+    const yrows = R.years.map(yr => { const a = divTotals(R.divs.filter(d => d.year === yr));
+      return `<tr><td>${yr}</td><td class="num">${a.count}</td>${money(a.gross)}${money(a.wht)}${money(a.net)}${money(a.credit)}${money(a.excess)}<td class="num"><b>${euro(a.irishTax)}</b></td></tr>`; });
+    const grp = groups => groups.map(([k, g]) => `<tr><td>${esc(k)}</td><td class="num">${g.count}</td>${money(g.gross)}${money(g.wht)}${money(g.credit)}${money(g.excess)}${money(g.incomeTax - g.credit)}${money(g.usc)}${money(g.prsi)}${money(g.exitTax)}<td class="num"><b>${euro(g.irishTax)}</b></td></tr>`);
+    const ghead = ['', 'Payments', 'Gross', 'WHT', 'Credit', 'Excess WHT', 'Income tax', 'USC', 'PRSI', 'Exit tax', 'Irish tax'];
+    const country = d => d.category === 'Fund distribution (exit tax)' ? `${d.country} (exit tax)` : d.country === 'IE' ? 'IE (Irish DWT)'
+      : d.category === 'CFD dividend equivalent' ? `${d.country} (CFD)` : d.treaty === null ? `${d.country} (no treaty)` : `${d.country} (treaty ${pct(d.treaty)})`;
+    const detail = items.slice(0, 3000).map(d => `<tr><td>${d.paid}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.isin)}</td><td>${esc(d.source)}</td><td>${esc(d.category)}</td>${money(d.gross)}<td class="num">${pct(d.whtRate)}</td>${money(d.wht)}${money(d.credit)}${money(d.irishTax)}<td class="small muted">${esc(d.flag)}</td></tr>`);
+    const prsi = S.prsi === 'auto' ? 'rate on payment date' : pct(num(S.prsi));
+    return `<div class="panel"><h2>Dividends</h2>
+      <div class="small muted">Income tax ${pct(S.incomeTax)}, USC ${pct(S.usc)}, PRSI ${prsi} (change these in <a href="#" onclick="app.tab('settings');return false">Settings</a>). Foreign tax is credited against income tax only, up to the treaty rate. Distributions from EEA funds are taxed at exit tax.</div>
+      <div class="kpis">${kpi(`${y} gross dividends`, euro(t.gross), `net received ${euro(t.net)}`)}${kpi('Foreign tax withheld', euro(t.wht), `credit allowed ${euro(t.credit)}`)}
+        ${kpi('Excess WHT', euro(t.excess), 'above treaty rates, reclaim at source')}${kpi('Irish tax on dividends', euro(t.irishTax), `IT ${euro(t.incomeTax - t.credit)} · USC ${euro(t.usc)} · PRSI ${euro(t.prsi)} · exit ${euro(t.exitTax)}`)}</div>
+      <h3>By year</h3>${table(['Year', 'Payments', 'Gross', 'WHT', 'Net received', 'Credit', 'Excess WHT', 'Irish tax'], yrows, [1, 2, 3, 4, 5, 6, 7], false)}
+      <h3>${y} by category</h3>${table(ghead, grp(groupBy(items, d => d.category)), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])}
+      <h3>${y} by country of the ISIN</h3>${table(ghead, grp(groupBy(items, country)), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])}
+      <h3>${y} payments</h3>${table(['Paid', 'Instrument', 'ISIN', 'Source', 'Category', 'Gross', 'WHT rate', 'WHT', 'Credit', 'Irish tax', 'Flag'], detail, [5, 6, 7, 8, 9])}</div>`;
+  },
+
+  etf() {
+    const R = state.result, y = state.year, lots = R.lots, inScope = lots.filter(l => l.regime === 'Exit tax');
+    const cost = sum(inScope, l => l.cost), value = sum(inScope, l => l.value), tax = sum(inScope, l => l.exitTax);
+    const next = inScope.length ? inScope.map(l => l.dd).sort()[0] : '—', today = new Date().toISOString().slice(0, 10);
+    const lotRows = lots.map(l => `<tr class="${l.regime === 'Exit tax' ? '' : 'muted'}"><td>${l.purchased}</td><td>${esc(l.name)}</td><td class="mono">${esc(l.isin)}</td><td class="num">${l.units.toFixed(6)}</td>
+      <td class="num">${euro(l.cost)}${l.estimated ? ' <span class="small muted">est.</span>' : ''}</td>${money(l.value)}${signed(l.gain)}
+      <td>${l.regime === 'Exit tax' ? `${l.dd} <span class="small muted">${((dayNum(l.dd) - dayNum(today)) / 365.25).toFixed(1)} yrs</span>` : '<span class="muted">n/a</span>'}</td>
+      <td><span class="badge ${l.regime === 'Exit tax' ? 'good' : l.regime.startsWith('CGT') ? 'neutral' : 'warn'}">${esc(l.regime)}</span></td><td class="num">${l.regime === 'Exit tax' ? pct(exitTaxRate(l.dd)) : '—'}</td>${money(l.exitTax)}</tr>`);
+    const sold = R.disposals.filter(d => d.year === y && d.regime === 'Exit tax');
+    const soldRows = sold.map(d => `<tr><td>${d.opened}</td><td>${d.closed}</td><td>${esc(d.name)}</td><td class="mono">${esc(d.isin)}</td><td>${esc(d.source)}</td>${signed(d.gain)}<td class="num">${pct(exitTaxRate(d.closed))}</td>${money(d.exitTax)}</tr>`);
+    return `<div class="panel"><h2>ETFs: deemed disposal &amp; exit tax <span class="small muted">etoro holdings at ${R.snapshot || '—'}</span></h2>
+      <div class="kpis">${kpi('Exit-tax lots held', inScope.length)}${kpi('Purchase value', euro(cost), 'ECB rate on each purchase date')}${kpi('Current value', euro(value))}
+        ${kpi('Unrealised gain/loss', euro(value - cost), '', value >= cost ? 'pos' : 'neg')}${kpi('Exit tax at current value', euro(tax))}${kpi('Next deemed disposal', next)}</div>
+      <h3>Open lots (each purchase has its own 8-year clock)</h3>
+      ${table(['Purchased', 'ETF', 'ISIN', 'Units', 'Purchase value', 'Current value', 'Gain / loss', 'Deemed disposal', 'Regime', 'Rate', 'Exit tax'], lotRows, [3, 4, 5, 6, 9, 10])}
+      <p class="small muted">Deemed disposal falls every 8 years per lot, at the value on that date. The exit tax shown uses today's value. "est." = bought before your earliest statement, so the cost comes from the open price. Manual entries are disposals only, so they aren't tracked here.</p>
+      <h3>EEA fund disposals in ${y}</h3>${table(['Purchased', 'Sold', 'ETF', 'ISIN', 'Source', 'Gain (ECB)', 'Rate', 'Exit tax'], soldRows, [5, 6, 7])}
+      <p class="small muted">Exit tax is charged on gains only. Losses on exit-tax funds can't be offset against anything.</p></div>`;
+  },
+
+  manual() {
+    const M = state.manual, E = state.formError, today = new Date().toISOString().slice(0, 10);
+    const typeOpts = ASSET_TYPES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+    const curOpts = '<option>EUR</option><option>USD</option>';
+    const broker = esc(state.lastBroker || '');
+    const dRows = M.disposals.map(m => `<tr><td>${esc(m.broker)}</td><td>${esc(m.asset)}</td><td class="mono">${esc(m.isin)}</td><td>${esc(m.type)}</td><td>${m.acquired}</td><td>${m.disposed}</td>
+      <td class="num">${m.units || ''}</td><td class="num">${m.cost.toFixed(2)} ${m.currency}</td><td class="num">${m.proceeds.toFixed(2)} ${m.currency}</td><td class="num">${m.fees.toFixed(2)}</td>
+      ${(() => { const d = state.result?.disposals.find(x => x.manualId === m.id); return d ? signed(d.gain) : '<td></td>'; })()}
+      <td><button class="btn danger small" onclick="app.remove('disposals',${m.id})">Delete</button></td></tr>`);
+    const vRows = M.dividends.map(m => `<tr><td>${esc(m.broker)}</td><td>${esc(m.asset)}</td><td class="mono">${esc(m.isin)}</td><td>${esc(m.type)}</td><td>${m.paid}</td>
+      <td class="num">${m.net.toFixed(2)} ${m.currency}</td><td class="num">${m.wht.toFixed(2)} ${m.currency}</td>
+      <td><button class="btn danger small" onclick="app.remove('dividends',${m.id})">Delete</button></td></tr>`);
+    return `<div class="panel"><h2>Manual entry: other brokers</h2>
+      <div class="callout">For brokers not yet supported (e.g. Trading 212, Degiro, Interactive Brokers, Revolut), enter disposals and dividends here. They are combined with your etoro data by tax year, and included in CGT, loss carry-forward, the 4-week rule and the dividend figures.</div>
+      <div class="callout warn">Entries live only in this browser tab. Use <b>Export CSV</b> to save them, and <b>Import CSV</b> to load them next time.${state.unsaved ? ' <b>You have unsaved changes.</b>' : ''}</div>
+      <div class="controls"><button class="btn ghost" onclick="app.exportManual()">Export CSV</button>
+        <label class="btn ghost" style="display:inline-block">Import CSV<input type="file" accept=".csv" hidden onchange="app.importManual(this.files[0]);this.value=''"></label>
+        <button class="btn ghost" onclick="app.exportManual(true)">Download blank template</button>
+        ${M.disposals.length + M.dividends.length ? '<button class="btn danger" onclick="app.clearManual()">Delete all manual entries</button>' : ''}</div>
+      ${E.import ? `<div class="error">${esc(E.import)}</div>` : ''}
+    </div>
+    <div class="panel"><h2>Add a disposal (sale)</h2>
+      <form class="form" onsubmit="app.addDisposal(event)">
+        <label>Broker<input name="broker" value="${broker}" placeholder="e.g. Trading 212"></label>
+        <label>Asset name *<input name="asset" required placeholder="e.g. Apple Inc"></label>
+        <label>ISIN<input name="isin" placeholder="e.g. US0378331005" maxlength="12"></label>
+        <label>Asset type<select name="type">${typeOpts}</select></label>
+        <label>Date acquired *<input name="acquired" type="date" required max="${today}"></label>
+        <label>Date disposed *<input name="disposed" type="date" required max="${today}"></label>
+        <label>Units<input name="units" type="number" step="any" min="0"></label>
+        <label>Currency<select name="currency">${curOpts}</select></label>
+        <label>Total cost *<input name="cost" type="number" step="0.01" min="0" required></label>
+        <label>Total proceeds *<input name="proceeds" type="number" step="0.01" min="0" required></label>
+        <label>Selling fees<input name="fees" type="number" step="0.01" min="0" value="0"></label>
+        <button class="btn" type="submit">Add disposal</button>
+      </form>
+      ${E.disposal ? `<div class="error">${esc(E.disposal)}</div>` : ''}
+      <p class="small muted">Cost should include buying fees and stamp duty. USD amounts are converted at the ECB rate: cost on the acquisition date, proceeds and fees on the disposal date. For EUR amounts, convert them yourself first. Add the ISIN so the 4-week rule can match purchases across brokers. ETFs with an EU/EEA ISIN (IE, LU, …) are treated under exit tax.</p>
+      <h3>Manual disposals (${M.disposals.length})</h3>
+      ${table(['Broker', 'Asset', 'ISIN', 'Type', 'Acquired', 'Disposed', 'Units', 'Cost', 'Proceeds', 'Fees', 'Gain (EUR)', ''], dRows, [6, 7, 8, 9, 10], false)}
+    </div>
+    <div class="panel"><h2>Add a dividend</h2>
+      <form class="form" onsubmit="app.addDividend(event)">
+        <label>Broker<input name="broker" value="${broker}"></label>
+        <label>Instrument *<input name="asset" required></label>
+        <label>ISIN<input name="isin" maxlength="12" placeholder="sets the treaty country"></label>
+        <label>Kind<select name="type"><option>Dividend</option><option>Fund distribution</option></select></label>
+        <label>Date paid *<input name="paid" type="date" required max="${today}"></label>
+        <label>Currency<select name="currency">${curOpts}</select></label>
+        <label>Net received *<input name="net" type="number" step="0.01" min="0" required></label>
+        <label>Tax withheld<input name="wht" type="number" step="0.01" min="0" value="0"></label>
+        <button class="btn" type="submit">Add dividend</button>
+      </form>
+      ${E.dividend ? `<div class="error">${esc(E.dividend)}</div>` : ''}
+      <p class="small muted">"Fund distribution" means income from an EU/EEA fund, such as an Irish-domiciled ETF. It is taxed at exit tax rather than income tax.</p>
+      <h3>Manual dividends (${M.dividends.length})</h3>
+      ${table(['Broker', 'Instrument', 'ISIN', 'Kind', 'Paid', 'Net', 'Withheld', ''], vRows, [5, 6], false)}
+    </div>`;
+  },
+
+  review() {
+    const R = state.result, y = state.year, flags = [];
+    for (const d of R.disposals.filter(d => d.year === y)) {
+      if (d.restricted) flags.push([d.closed, d.name, d.isin, d.source, d.gain, 'warn', '4-week rule: same ISIN bought within 28 days. The loss may be restricted']);
+      if (d.note) flags.push([d.closed, d.name, d.isin, d.source, d.gain, 'neutral', d.note]);
+    }
+    for (const d of R.divs.filter(d => d.year === y && d.flag)) flags.push([d.paid, d.name, d.isin, d.source, d.gross, 'neutral', d.flag]);
+    for (const l of R.lots.filter(l => l.estimated)) flags.push([l.purchased, l.name, l.isin, 'etoro', l.cost, 'neutral', 'ETF cost estimated: bought before the earliest statement']);
+    const rows = flags.slice(0, 3000).map(f => `<tr><td>${f[0]}</td><td>${esc(f[1])}</td><td class="mono">${esc(f[2])}</td><td>${esc(f[3])}</td>${signed(f[4])}<td><span class="badge ${f[5]}">${esc(f[6])}</span></td></tr>`);
+    return `<div class="panel"><h2>Review flags: ${y}</h2>
+      <div class="callout warn">These are prompts for review, not tax conclusions. Annual statements can't prove the full acquisition history.</div>
+      ${table(['Date', 'Instrument', 'ISIN', 'Source', 'Amount (EUR)', 'Flag'], rows, [4])}</div>
+      <div class="panel"><h2>Not modelled: check these separately</h2><ul class="tight small">
+        <li>FIFO share identification. Irish rules match the earliest shares first, but etoro closes specific positions.</li>
+        <li>4-week rule partial matching. The conservative figure disallows the whole loss, although only the matched quantity is restricted.</li>
+        <li>CGT on holding foreign currency (USD cash is a chargeable asset), corporate actions, and transfers between brokers.</li>
+        <li>Losses from before your earliest statement. Enter them in <a href="#" onclick="app.tab('settings');return false">Settings</a>.</li>
+        <li>ADR dividends show a US ISIN, but the tax is withheld by the issuer's home country.</li>
+        <li>The order in which losses and the exemption are applied, treaty rates, and whether PRSI applies to you.</li></ul></div>`;
+  },
+
+  settings() {
+    const S = state.settings;
+    return `<div class="panel"><h2>Settings</h2>
+      <form class="form" onchange="app.saveSettings(this)" onsubmit="event.preventDefault()">
+        <label>Marginal income tax rate<select name="incomeTax"><option value="0.2" ${S.incomeTax === 0.2 ? 'selected' : ''}>20% (standard)</option><option value="0.4" ${S.incomeTax === 0.4 ? 'selected' : ''}>40% (higher)</option></select></label>
+        <label>Marginal USC rate (%)<input name="usc" type="number" step="0.5" min="0" max="11" value="${+(S.usc * 100).toFixed(2)}"></label>
+        <label>PRSI<select name="prsi"><option value="auto" ${S.prsi === 'auto' ? 'selected' : ''}>Rate on payment date (4% / 4.1% / 4.2%)</option><option value="0" ${S.prsi === 0 ? 'selected' : ''}>Not liable (0%)</option></select></label>
+        <label>CGT losses brought forward into the first year (€)<input name="lossesBf" type="number" step="0.01" min="0" value="${S.lossesBf}"></label>
+      </form>
+      <p class="small muted">Rates apply to dividends only. USC is 8% on income above €70,044 and 3% below it (2025 bands). Losses brought forward are unused CGT losses from years before your earliest statement.</p></div>`;
+  },
+};
+
+// ------------------------------------------------------------------ actions
+function readForm(form) { return Object.fromEntries(new FormData(form).entries()); }
+function validateDisposal(f) {
+  const m = {broker: (f.broker || '').trim(), asset: (f.asset || '').trim(), isin: (f.isin || '').trim().toUpperCase(), type: f.type || 'Stocks',
+             acquired: f.acquired, disposed: f.disposed, units: num(f.units), currency: f.currency === 'USD' ? 'USD' : 'EUR',
+             cost: num(f.cost), proceeds: num(f.proceeds), fees: num(f.fees)};
+  if (!m.asset) return [null, 'Enter an asset name.'];
+  if (!validIso(m.acquired) || !validIso(m.disposed)) return [null, 'Enter valid acquisition and disposal dates.'];
+  if (m.disposed < m.acquired) return [null, 'The disposal date is before the acquisition date.'];
+  if (m.cost < 0 || m.proceeds < 0 || m.fees < 0) return [null, 'Amounts must be zero or more.'];
+  if (m.isin && !/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(m.isin)) return [null, `"${m.isin}" isn't a valid ISIN (2 letters, 9 characters, 1 check digit).`];
+  if (!ASSET_TYPES.some(t => t[0] === m.type)) m.type = 'Other';
+  return [m, ''];
+}
+function validateDividend(f) {
+  const m = {broker: (f.broker || '').trim(), asset: (f.asset || '').trim(), isin: (f.isin || '').trim().toUpperCase(),
+             type: f.type === 'Fund distribution' ? 'Fund distribution' : 'Dividend', paid: f.paid,
+             currency: f.currency === 'USD' ? 'USD' : 'EUR', net: num(f.net), wht: num(f.wht)};
+  if (!m.asset) return [null, 'Enter an instrument name.'];
+  if (!validIso(m.paid)) return [null, 'Enter a valid payment date.'];
+  if (m.net < 0 || m.wht < 0) return [null, 'Amounts must be zero or more.'];
+  if (m.isin && !/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(m.isin)) return [null, `"${m.isin}" isn't a valid ISIN.`];
+  return [m, ''];
+}
+const MANUAL_HEAD = ['record', 'broker', 'asset', 'isin', 'type', 'currency', 'acquired', 'disposed', 'units', 'cost', 'proceeds', 'fees', 'paid', 'net', 'wht'];
+
+const app = {
+  tab(id) { state.active = id; render(); window.scrollTo({top: 0}); },
+  setYear(y) { state.year = +y; render(); },
+  search(q) { state.search = q; render(); const el = document.getElementById('search'); el.focus(); el.setSelectionRange(q.length, q.length); },
+  clearFiles() { state.files = {}; refresh(); },
+  async addDisposal(ev) {
+    ev.preventDefault(); const [m, err] = validateDisposal(readForm(ev.target));
+    state.formError = {disposal: err}; if (!m) return render();
+    m.id = state.nextId++; state.lastBroker = m.broker; state.manual.disposals.push(m); state.unsaved = true; await refresh();
+  },
+  async addDividend(ev) {
+    ev.preventDefault(); const [m, err] = validateDividend(readForm(ev.target));
+    state.formError = {dividend: err}; if (!m) return render();
+    m.id = state.nextId++; state.lastBroker = m.broker; state.manual.dividends.push(m); state.unsaved = true; await refresh();
+  },
+  remove(kind, id) { state.manual[kind] = state.manual[kind].filter(m => m.id !== id); state.unsaved = true; refresh(); },
+  clearManual() { if (!confirm('Delete all manual entries?')) return; state.manual = {disposals: [], dividends: []}; state.unsaved = false; refresh(); },
+  exportManual(blank = false) {
+    const rows = [MANUAL_HEAD];
+    if (!blank) {
+      for (const m of state.manual.disposals) rows.push(['disposal', m.broker, m.asset, m.isin, m.type, m.currency, m.acquired, m.disposed, m.units || '', m.cost, m.proceeds, m.fees, '', '', '']);
+      for (const m of state.manual.dividends) rows.push(['dividend', m.broker, m.asset, m.isin, m.type, m.currency, '', '', '', '', '', '', m.paid, m.net, m.wht]);
+      state.unsaved = false;
+    } else {
+      rows.push(['disposal', 'Trading 212', 'Apple Inc', 'US0378331005', 'Stocks', 'EUR', '2024-03-01', '2025-06-15', '10', '1550.00', '1820.00', '1.50', '', '', '']);
+      rows.push(['dividend', 'Trading 212', 'Apple Inc', 'US0378331005', 'Dividend', 'EUR', '', '', '', '', '', '', '2025-05-15', '2.12', '0.38']);
+    }
+    download(blank ? 'manual-entries-template.csv' : 'irish-etoro-tax-manual-entries.csv', rows); render();
+  },
+  async importManual(file) {
+    if (!file) return;
+    const rows = parseCsv(await file.text()), head = (rows[0] || []).map(h => h.trim().toLowerCase());
+    const missing = MANUAL_HEAD.filter(h => !head.includes(h));
+    if (missing.length) { state.formError = {import: `Missing column(s): ${missing.join(', ')}. Download the blank template to see the format.`}; return render(); }
+    const added = {disposals: [], dividends: []}, errors = [];
+    rows.slice(1).forEach((r, i) => {
+      const f = Object.fromEntries(head.map((h, j) => [h, r[j] ?? '']));
+      const kind = f.record.trim().toLowerCase();
+      const [m, err] = kind === 'disposal' ? validateDisposal(f) : kind === 'dividend' ? validateDividend(f) : [null, `unknown record "${f.record}"`];
+      if (!m) errors.push(`row ${i + 2}: ${err.replace(/\.$/, '')}`); else { m.id = state.nextId++; added[kind + 's'].push(m); }
+    });
+    if (errors.length) { state.formError = {import: `Nothing imported. Fix these rows first: ${errors.slice(0, 5).join('; ')}${errors.length > 5 ? ` (and ${errors.length - 5} more)` : ''}`}; return render(); }
+    state.manual.disposals.push(...added.disposals); state.manual.dividends.push(...added.dividends);
+    state.formError = {}; state.unsaved = false; await refresh();
+  },
+  exportDisposals() {
+    const rows = [['Tax year', 'Closed', 'Opened', 'Instrument', 'ISIN', 'Type', 'Source', 'Units', 'Cost (EUR)', 'Proceeds (EUR)', 'Gain (EUR, ECB)', 'etoro EUR', 'Regime', 'Note', '4-week flag', 'Payment period']];
+    for (const d of state.result.disposals) rows.push([d.year, d.closed, d.opened, d.name, d.isin, d.type, d.source, d.units || '',
+      d.costEur === null ? '' : d.costEur.toFixed(2), d.proceedsEur === null ? '' : d.proceedsEur.toFixed(2), d.gain.toFixed(2),
+      d.etoroEur === null ? '' : d.etoroEur.toFixed(2), d.regime, d.note, d.restricted ? 'yes' : '', d.initial ? 'Jan–Nov' : 'Dec']);
+    download('irish-etoro-tax-disposals.csv', rows);
+  },
+  saveSettings(form) {
+    const f = readForm(form), S = state.settings;
+    S.incomeTax = +f.incomeTax; S.usc = Math.max(0, num(f.usc)) / 100; S.prsi = f.prsi === 'auto' ? 'auto' : 0; S.lossesBf = Math.max(0, num(f.lossesBf));
+    refresh();
+  },
+};
+window.app = app;
+
+document.getElementById('files').addEventListener('change', async e => {
+  const errors = [];
+  for (const f of e.target.files) { try { const s = await parseStatement(f); state.files[s.year] = s; } catch (err) { errors.push(err.message); } }
+  e.target.value = '';
+  await refresh();
+  if (errors.length) { state.error = errors.join(' '); render(); }
+});
+document.addEventListener('click', e => {  // sortable tables
+  const th = e.target.closest('table.sortable th'); if (!th) return;
+  const t = th.closest('table'), i = [...th.parentNode.children].indexOf(th), body = t.tBodies[0], asc = th.dataset.asc !== '1';
+  t.querySelectorAll('th').forEach(h => delete h.dataset.asc); th.dataset.asc = asc ? '1' : '0';
+  const key = r => { const s = (r.cells[i]?.innerText || '').trim().split('\n')[0];
+    const n = parseFloat(s.replace(/[€$,%\s]/g, '').replace('−', '-'));
+    return isNaN(n) || /^\d{4}-\d\d-\d\d/.test(s) ? s : n; };
+  [...body.rows].sort((a, b) => { const x = key(a), y = key(b); return (x > y ? 1 : x < y ? -1 : 0) * (asc ? 1 : -1); }).forEach(r => body.appendChild(r));
+});
+window.addEventListener('beforeunload', e => { if (state.unsaved) { e.preventDefault(); e.returnValue = ''; } });
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+record,broker,asset,isin,type,currency,acquired,disposed,units,cost,proceeds,fees,paid,net,wht
+disposal,Trading 212,Big Winner,IE00B4L5Y983,Stocks,EUR,2020-01-10,2025-06-01,10,1000,6010,10,,,
+disposal,Degiro,"December Sale, Inc",US0378331005,Stocks,EUR,2024-01-10,2025-12-10,5,500,1500,0,,,
+disposal,Degiro,NVIDIA loss,US67066G1040,Stocks,EUR,2024-01-01,2025-10-20,1,200,150,0,,,
+disposal,IBKR,USD trade,US5949181045,Stocks,USD,2024-03-01,2025-03-03,1,100,110,0,,,
+dividend,Degiro,Irish Co,IE0001827041,Dividend,EUR,,,,,,,2025-05-01,75,25
+dividend,Degiro,Irish fund,IE00B4L5Y983,Fund distribution,EUR,,,,,,,2025-06-01,10,0
